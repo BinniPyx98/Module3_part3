@@ -9,9 +9,10 @@ import { getEnv } from '@helper/environment';
 import { log } from '@helper/logger';
 import { dynamoClient } from '@services/dynamo-connect';
 import { S3Service } from '@services/s3.service';
+import axios from 'axios';
 import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
-import { DatabaseResult, GalleryObject, Metadata } from './gallery.inteface';
+import { DatabaseResult, GalleryObject, Metadata, Pexel } from './gallery.inteface';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 
 export class GalleryService {
@@ -41,65 +42,10 @@ export class GalleryService {
     pageNumber: number,
     limit: number
   ): Promise<DatabaseResult> {
-    // const all_Images: QueryCommandInput = {
-    //   TableName: getEnv('GALLERY_TABLE_NAME'),
-    //   KeyConditionExpression: '#userEmail = :user',
-    //   ExpressionAttributeNames: {
-    //     '#userEmail': 'email',
-    //   },
-    //   ExpressionAttributeValues: marshall({
-    //     ':user': 'All',
-    //   }),
-    // };
-    // const myImages: QueryCommandInput = {
-    //   TableName: getEnv('GALLERY_TABLE_NAME'),
-    //   KeyConditionExpression: '#userEmail = :user',
-    //   ExpressionAttributeNames: {
-    //     '#userEmail': 'email',
-    //   },
-    //   ExpressionAttributeValues: marshall({
-    //     ':user': userIdFromRequest,
-    //   }),
-    // };
-   // const allImgFromDynamo = await dynamoClient.send(new QueryCommand(all_Images));
-    //const userImgFromDynamo = await dynamoClient.send(new QueryCommand(myImages));
     // @ts-ignore
     const allArrayPath = await this.getAdminsImage();
     log('allPathArray = ' + allArrayPath);
     const userArrayPath = await this.getUsersImage(userIdFromRequest);
-   // const presentUserImageObject = userImgFromDynamo.Items;
-   // const presentAllImageObject = allImgFromDynamo.Items;
-
-    // if (presentUserImageObject?.length == 0) {
-    //   userArrayPath = [];
-    // } else {
-    //   for (const item of userImgFromDynamo.Items!) {
-    //     for (const prop in item) {
-    //       log('prop = ' + prop);
-    //       if (prop === 'urlImage') {
-    //         log('item.urlImage.S = ' + item.urlImage.S);
-    //         // @ts-ignore
-    //         userArrayPath.push(item.urlImage.S);
-    //       }
-    //     }
-    //     // @ts-ignore
-    //   }
-    // }
-
-    // if (presentAllImageObject?.length == 0) {
-    //   allArrayPath = [];
-    // } else {
-    //   for (const item of allImgFromDynamo.Items!) {
-    //     for (const prop in item) {
-    //       if (prop === 'urlImage') {
-    //         log('item in all = ' + item.urlImage.S);
-    //         // @ts-ignore
-    //         allArrayPath.push(item.urlImage.S);
-    //       }
-    //     }
-    //   }
-    // }
-
     const contArray = allArrayPath.concat(userArrayPath);
     log('cont Array= ' + contArray);
     const total = Math.ceil(Number(contArray.length) / limit);
@@ -288,5 +234,59 @@ export class GalleryService {
     const decodedUrl = decodeURIComponent(url);
 
     return url;
+  }
+  async getPexelImages(queryStringValue: string): Promise<Array<Pexel>> {
+    let data;
+    const options = {
+      params: {
+        query: queryStringValue,
+        per_page: 10,
+      },
+      headers: {
+        Authorization: `563492ad6f917000010000012ba2cb11cb094f64b32654bc5ad70681`,
+      },
+    };
+    try {
+      data = await axios.get('https://api.pexels.com/v1/search?query=${queryStringValue}&per_page=10', options);
+    } catch (e) {
+      log(e);
+    }
+
+    const jsonPixelResolve = data;
+    const pathArray: Array<Pexel> = [];
+    // @ts-ignore
+    for (const photo of jsonPixelResolve.data.photos) {
+      pathArray.push({
+        id: photo.id,
+        url: photo.src.medium,
+      });
+    }
+    log(pathArray);
+
+    return pathArray;
+  }
+  async saveLikedPhoto(event, idArray: Array<number>): Promise<void> {
+    let data;
+    for (const id of idArray) {
+      const options = {
+        headers: {
+          Authorization: `563492ad6f917000010000012ba2cb11cb094f64b32654bc5ad70681`,
+        },
+      };
+      try {
+        data = await axios.get(`https://api.pexels.com/v1/photos/${id}`, options);
+      } catch (e) {
+        log(e);
+      }
+      const filename = data.data.src.original.split(`${id}/`)[1];
+      const contentType = filename.split('.')[1];
+      log(filename[1]);
+      const imageMetadata = {
+        filename: filename,
+        size: 1111,
+        contentType: `image/${contentType}`,
+      };
+      await this.saveImgMetadata(event, imageMetadata);
+    }
   }
 }

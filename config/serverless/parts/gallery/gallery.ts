@@ -76,6 +76,54 @@ export const getGalleryConfig: AWSPartitial = {
         },
       ],
     },
+    getImageFromPixel: {
+      handler: 'api/gallery/handler.getImageFromPixel',
+      memorySize: 128,
+      events: [
+        {
+          http: {
+            path: '/getImageFromPixel',
+            method: 'get',
+            integration: 'lambda',
+            cors: true,
+            authorizer: {
+              name: 'AuthorizerCheckToken',
+            },
+            response: {
+              headers: {
+                'Access-Control-Allow-Origin': "'*'",
+                'Content-Type': "'application/json'",
+              },
+              template: "$input.json('$')",
+            },
+          },
+        },
+      ],
+    },
+    saveLikedPhoto: {
+      handler: 'api/gallery/handler.saveLikedPhoto',
+      memorySize: 128,
+      events: [
+        {
+          http: {
+            path: '/saveLikedPhoto',
+            method: 'post',
+            integration: 'lambda-proxy',
+            cors: true,
+            authorizer: {
+              name: 'AuthorizerCheckToken',
+            },
+            response: {
+              headers: {
+                'Access-Control-Allow-Origin': "'*'",
+                'Content-Type': "'application/json'",
+              },
+              template: "$input.json('$')",
+            },
+          },
+        },
+      ],
+    },
     triggerS3Upload: {
       handler: 'api/gallery/handler.triggerS3Upload',
       memorySize: 128,

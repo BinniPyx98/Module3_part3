@@ -1,3 +1,5 @@
+import { getImageFromPixel } from './handler';
+
 /**
  * This file should contain all required interfaces for the feature
  */
@@ -27,4 +29,8 @@ export interface Metadata {
   filename: string;
   size: number;
   contentType: string;
+}
+export interface Pexel {
+  id: string;
+  url: string;
 }

@@ -1,7 +1,7 @@
 import { getEnv } from '@helper/environment';
 import { APIGatewayLambdaEvent } from '@interfaces/api-gateway-lambda.interface';
 import { S3Service } from '@services/s3.service';
-import { DatabaseResult, GetGalleryObject, Metadata } from './gallery.inteface';
+import { DatabaseResult, GetGalleryObject, Metadata, Pexel } from './gallery.inteface';
 import { GalleryService } from './gallery.service';
 import { log } from '@helper/logger';
 
@@ -52,5 +52,13 @@ export class GalleryManager {
     const decodedUrl = decodeURIComponent(imageUrl);
     log('decodedUrl = ' + decodedUrl);
     return this.service.updateStatus(userEmail, decodedUrl, fileName);
+  }
+  getPexelImages(event: APIGatewayLambdaEvent<void>): Promise<Array<Pexel>> {
+    const queryStringValue = event.query.searchQuery;
+    return this.service.getPexelImages(queryStringValue);
+  }
+  saveLikedPhoto(event: APIGatewayLambdaEvent<string>) {
+    const idArray = JSON.parse(event.body);
+    return this.service.saveLikedPhoto(event, idArray);
   }
 }
