@@ -267,6 +267,7 @@ export class GalleryService {
   }
   async saveLikedPhoto(event, idArray: Array<number>): Promise<void> {
     let data;
+    let image;
     for (const id of idArray) {
       const options = {
         headers: {
@@ -280,13 +281,31 @@ export class GalleryService {
       }
       const filename = data.data.src.original.split(`${id}/`)[1];
       const contentType = filename.split('.')[1];
-      log(filename[1]);
+      // log(filename[1]);
       const imageMetadata = {
         filename: filename,
         size: 1111,
         contentType: `image/${contentType}`,
       };
-      await this.saveImgMetadata(event, imageMetadata);
+      const s3 = new S3Service();
+      try {
+        image = await axios.get(data.data.src.original,{responseType: 'arraybuffer'});
+      } catch (e) {
+        log(e);
+      }
+      const userEmail = await this.getUserIdFromToken(event);
+      //const url = s3.getPreSignedPutUrl(userEmail + '/' + filename, getEnv('S3_NAME'));
+      //let bodyResolve = JsonS3UrlForPutImage.split('?')[0];
+
+      const test = await s3.put(`${userEmail}/${filename}`, image.data, getEnv('S3_NAME'), imageMetadata.contentType);
+      log(test);
+      try {
+        const responseS3 = await this.saveImgMetadata(event, imageMetadata);
+        log(responseS3);
+      } catch (e) {
+        log(e);
+      }
+      await s3.put(`userEmail/${filename}`, image.data, getEnv('S3_NAME'), imageMetadata.contentType);
     }
   }
 }
