@@ -98,6 +98,7 @@
     "@aws-sdk/client-dynamodb": "^3.37.0",
     "@aws-sdk/util-dynamodb": "^3.38.0",
     "@redtea/format-axios-error": "^2.0.2",
+    "@reduxjs/toolkit": "^1.6.2",
     "@types/react-redux": "^7.1.20",
     "alai": "^1.0.3",
     "aws-lambda-multipart-parser": "^0.1.3",

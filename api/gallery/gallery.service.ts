@@ -243,7 +243,7 @@ export class GalleryService {
         per_page: 10,
       },
       headers: {
-        Authorization: `563492ad6f917000010000012ba2cb11cb094f64b32654bc5ad70681`,
+        Authorization: getEnv('KEY_API'),
       },
     };
     try {
@@ -274,7 +274,7 @@ export class GalleryService {
     for (const id of idArray) {
       const options = {
         headers: {
-          Authorization: `563492ad6f917000010000012ba2cb11cb094f64b32654bc5ad70681`,
+          Authorization: getEnv('KEY_API'),
         },
       };
       try {
