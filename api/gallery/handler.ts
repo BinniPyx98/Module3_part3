@@ -91,5 +91,5 @@ export const triggerS3Upload: S3Handler = async (event) => {
   const manager = new GalleryManager();
   await manager.updateStatus(imageKeyInS3);
   await manager.saveSubclip(event, imageKeyInS3);
-  log('trigger stoped');
+  log('trigger stopped');
 };

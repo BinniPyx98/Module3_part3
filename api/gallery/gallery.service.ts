@@ -326,7 +326,7 @@ export class GalleryService {
         contentType
       );
       log(subClipUploadResult);
-      await this.saveSubclipStatusInDynamo(userEmail, fileName);
+      await this.saveSubclipStatusInDynamo(userEmail, filename);
     } catch (err) {
       log(err);
     }

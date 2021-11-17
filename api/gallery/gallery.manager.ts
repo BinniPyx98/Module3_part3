@@ -29,19 +29,19 @@ export class GalleryManager {
   //  * @param mediaInfoCurlService - required services
   //  */
 
-  async checkFilterAndFindInDb(event: APIGatewayLambdaEvent<any>): Promise<DatabaseResult> {
-    return await this.service.checkFilterAndFindInDb(event);
+  checkFilterAndFindInDb(event: APIGatewayLambdaEvent<any>): Promise<DatabaseResult> {
+    return this.service.checkFilterAndFindInDb(event);
   }
 
-  async createGalleryObject(event: APIGatewayLambdaEvent<GetGalleryObject>, dbResult: DatabaseResult) {
-    return await this.service.createGalleryObject(event, dbResult);
+  createGalleryObject(event: APIGatewayLambdaEvent<GetGalleryObject>, dbResult: DatabaseResult) {
+    return this.service.createGalleryObject(event, dbResult);
   }
 
-  async getUrlForUploadToS3(event, metadata: Metadata): Promise<string> {
-    return await this.service.getUrlForUploadToS3(event, metadata);
+  getUrlForUploadToS3(event, metadata: Metadata): Promise<string> {
+    return this.service.getUrlForUploadToS3(event, metadata);
   }
 
-  async saveImgMetadata(event: APIGatewayLambdaEvent<string>, metadata: Metadata): Promise<void> {
+  saveImgMetadata(event: APIGatewayLambdaEvent<string>, metadata: Metadata): Promise<void> {
     return this.service.saveImgMetadata(event, metadata);
   }
 

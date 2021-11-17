@@ -52,7 +52,7 @@ export const s3Config: AWSPartitial = {
   custom: {
     S3Names: {
       S3Bucket: {
-        local: 'kalinichenko-prod-s3bucket',
+        local: 'kalinichenko-dev-s3bucket',
         dev: 'kalinichenko-dev-s3bucket',
         test: 'kalinichenko-test-s3bucket',
         prod: 'kalinichenko-prod-s3bucket',

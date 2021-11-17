@@ -52,7 +52,7 @@ export const s3SUbClipConfig: AWSPartitial = {
   custom: {
     S3SubclipNames: {
       S3SubclipBucket: {
-        local: 'kalinichenko-prod-s3bucket-subclip',
+        local: 'kalinichenko-dev-s3bucket-subclip',
         dev: 'kalinichenko-dev-s3bucket-subclip',
         test: 'kalinichenko-test-s3bucket-subclip',
         prod: 'kalinichenko-prod-s3bucket-subclip',
