@@ -14,7 +14,7 @@ import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import { DatabaseResult, GalleryObject, Metadata, Pexel } from './gallery.inteface';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
-
+import * as sharp from 'sharp';
 export class GalleryService {
   async checkFilterAndFindInDb(event): Promise<DatabaseResult> {
     const pageNumber = Number(event.queryStringParameters.page);
@@ -235,7 +235,7 @@ export class GalleryService {
 
     return url;
   }
-  async getPexelImages(queryStringValue: string): Promise<Array<Pexel>> {
+  async getPexelImages(queryStringValue: string): Promise<any> {
     let data;
     const options = {
       params: {
@@ -251,7 +251,12 @@ export class GalleryService {
     } catch (e) {
       log(e);
     }
-
+    if (data.status === 429) {
+      return {
+        statusCode: 429,
+        body: 'limit',
+      };
+    }
     const jsonPixelResolve = data;
     const pathArray: Array<Pexel> = [];
     // @ts-ignore
@@ -261,8 +266,6 @@ export class GalleryService {
         url: photo.src.medium,
       });
     }
-    log(pathArray);
-
     return pathArray;
   }
   async saveLikedPhoto(event, idArray: Array<number>): Promise<void> {
@@ -282,21 +285,18 @@ export class GalleryService {
       const filename = data.data.src.original.split(`${id}/`)[1];
       const contentType = filename.split('.')[1];
       // log(filename[1]);
-      const imageMetadata = {
-        filename: filename,
-        size: 1111,
-        contentType: `image/${contentType}`,
-      };
       const s3 = new S3Service();
       try {
-        image = await axios.get(data.data.src.original,{responseType: 'arraybuffer'});
+        image = await axios.get(data.data.src.original, { responseType: 'arraybuffer' });
       } catch (e) {
         log(e);
       }
       const userEmail = await this.getUserIdFromToken(event);
-      //const url = s3.getPreSignedPutUrl(userEmail + '/' + filename, getEnv('S3_NAME'));
-      //let bodyResolve = JsonS3UrlForPutImage.split('?')[0];
-
+      const imageMetadata = {
+        filename: filename,
+        size: image.data.length,
+        contentType: `image/${contentType}`,
+      };
       const test = await s3.put(`${userEmail}/${filename}`, image.data, getEnv('S3_NAME'), imageMetadata.contentType);
       log(test);
       try {
@@ -305,7 +305,49 @@ export class GalleryService {
       } catch (e) {
         log(e);
       }
-      await s3.put(`userEmail/${filename}`, image.data, getEnv('S3_NAME'), imageMetadata.contentType);
+      await s3.put(`${userEmail}/${filename}`, image.data, getEnv('S3_NAME'), imageMetadata.contentType);
+    }
+  }
+
+  async saveSubclip(img, filename: string, contentType: string, userEmail: string): Promise<void> {
+    const [fileName, extension] = filename.split('.');
+    const s3 = new S3Service();
+    const sharpImg = await sharp(img)
+      .resize(512, 250, {
+        fit: sharp.fit.inside,
+      })
+      .toBuffer();
+    log('sharpImage = ' + sharpImg);
+    try {
+      const subClipUploadResult = await s3.put(
+        `${userEmail}/${fileName}_SC.${extension}`,
+        sharpImg,
+        getEnv('S3_SUBCLIP'),
+        contentType
+      );
+      log(subClipUploadResult);
+      await this.saveSubclipStatusInDynamo(userEmail, fileName);
+    } catch (err) {
+      log(err);
+    }
+  }
+  async saveSubclipStatusInDynamo(userEmail: string, fileName: string) {
+    const hashImage = crypto.createHmac('sha256', 'test').update(fileName).digest('hex');
+    const updateItem = {
+      TableName: getEnv('GALLERY_TABLE_NAME'),
+      Key: marshall({
+        email: userEmail,
+        Hash: 'imageHash_' + hashImage,
+      }),
+      UpdateExpression: 'set Subclip = :subclipStatus',
+      ExpressionAttributeValues: marshall({
+        ':subclipStatus': true,
+      }),
+    };
+    try {
+      const updateStatus = await dynamoClient.send(new UpdateItemCommand(updateItem));
+    } catch (err) {
+      log(err);
     }
   }
 }

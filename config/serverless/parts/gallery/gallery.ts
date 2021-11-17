@@ -1,31 +1,6 @@
 import { AWSPartitial } from '../../types';
 
 export const getGalleryConfig: AWSPartitial = {
-  provider: {
-    environment: {},
-    iam: {
-      role: {
-        statements: [
-          // {
-          //   Effect: 'Allow',
-          //   Action: [
-          //     's3:PutObject',
-          //     's3:GetObject',
-          //     's3:getResourceUrl',
-          //     's3:getPreSignedPutUrl',
-          //     's3:PutObjectAsl',
-          //     's3:CreateBucket',
-          //     's3:GetObjectAcl',
-          //   ],
-          //   Resource: [
-          //     'arn:aws:dynamodb:*:*:table/${file(env.yml):${self:provider.stage}.S3_NAME}',
-          //     'arn:aws:dynamodb:*:*:table/${file(env.yml):${self:provider.stage}.S3_NAME}/index/*',
-          //   ],
-          // },
-        ],
-      },
-    },
-  },
   functions: {
     getGallery: {
       handler: 'api/gallery/handler.getGallery',
@@ -102,7 +77,8 @@ export const getGalleryConfig: AWSPartitial = {
     },
     saveLikedPhoto: {
       handler: 'api/gallery/handler.saveLikedPhoto',
-      memorySize: 128,
+      memorySize: 500,
+      timeout: 20,
       events: [
         {
           http: {
@@ -126,11 +102,12 @@ export const getGalleryConfig: AWSPartitial = {
     },
     triggerS3Upload: {
       handler: 'api/gallery/handler.triggerS3Upload',
-      memorySize: 128,
+      memorySize: 500,
+      timeout: 15,
       events: [
         {
           s3: {
-            bucket: 'kalinichecko-prod-s3bucket',
+            bucket: 'kalinichenko-dev-s3bucket',
             existing: true,
             event: 's3:ObjectCreated:*',
           },

@@ -1,6 +1,6 @@
 import { AWSPartitial } from '../../types';
 
-export const galleryConfig: AWSPartitial = {
+export const dynamoConfig: AWSPartitial = {
   provider: {
     environment: {
       GALLERY_TABLE_NAME: '${self:custom.tablesNames.GalleryTable.${self:provider.stage}}',
@@ -81,10 +81,10 @@ export const galleryConfig: AWSPartitial = {
   custom: {
     tablesNames: {
       GalleryTable: {
-        local: 'Kalinichecko-local-Gallery',
-        dev: 'Kalinichecko-dev-Gallery',
-        test: 'Kalinichecko-test-Gallery',
-        prod: 'kalinichecko-prod-gallery',
+        local: 'kalinichenko-local-gallery',
+        dev: 'kalinichenko-dev-gallery',
+        test: 'kalinichenko-test-gallery',
+        prod: 'kalinichenko-prod-gallery',
       },
     },
   },

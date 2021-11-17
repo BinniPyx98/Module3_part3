@@ -2,7 +2,8 @@ import type { AWS } from '@serverless/typescript';
 import { authorizationConfig } from './config/serverless/parts/auth/auth';
 import { getGalleryConfig } from './config/serverless/parts/gallery/gallery';
 import { s3Config } from './config/serverless/parts/s3/s3';
-import { galleryConfig } from './config/serverless/parts/tables/galleryTable';
+import { s3SUbClipConfig } from './config/serverless/parts/s3/s3_subclips';
+import { dynamoConfig } from './config/serverless/parts/tables/galleryTable';
 import { restApiCorsConfig } from './config/serverless/parts/rest-api-cors';
 import { joinParts } from './config/serverless/utils';
 
@@ -44,6 +45,9 @@ const masterConfig: AWS = {
       includeModules: {
         forceExclude: ['aws-sdk'],
       },
+      packagerOptions: {
+        scripts: ['npm rebuild --arch=x64 --platform=linux sharp'],
+      },
       concurrency: 5,
       serializedCompile: true,
       packager: 'npm',
@@ -72,7 +76,8 @@ const masterConfig: AWS = {
 module.exports = joinParts(masterConfig, [
   restApiCorsConfig,
   authorizationConfig,
-  getGalleryConfig,
-  galleryConfig,
   s3Config,
+  s3SUbClipConfig,
+  getGalleryConfig,
+  dynamoConfig,
 ]);

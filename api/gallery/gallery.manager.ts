@@ -44,21 +44,33 @@ export class GalleryManager {
   async saveImgMetadata(event: APIGatewayLambdaEvent<string>, metadata: Metadata): Promise<void> {
     return this.service.saveImgMetadata(event, metadata);
   }
+
   updateStatus(imageKeyInS3: string): Promise<void> {
     const s3 = new S3Service();
-    const userEmail = imageKeyInS3.split('/')[0];
-    const fileName = imageKeyInS3.split('/')[1];
+    const [userEmail, fileName] = imageKeyInS3.split('/');
     const imageUrl = s3.getPreSignedGetUrl(`${userEmail}/${fileName}`, getEnv('S3_NAME')).split('?')[0];
     const decodedUrl = decodeURIComponent(imageUrl);
     log('decodedUrl = ' + decodedUrl);
     return this.service.updateStatus(userEmail, decodedUrl, fileName);
   }
+
   getPexelImages(event: APIGatewayLambdaEvent<void>): Promise<Array<Pexel>> {
     const queryStringValue = event.query.searchQuery;
     return this.service.getPexelImages(queryStringValue);
   }
+
   saveLikedPhoto(event: APIGatewayLambdaEvent<string>) {
     const idArray = JSON.parse(event.body);
     return this.service.saveLikedPhoto(event, idArray);
+  }
+
+  async saveSubclip(event, imageKeyInS3: string): Promise<void> {
+    const s3 = new S3Service();
+    const [userEmail, fileName] = imageKeyInS3.split('/');
+    const contentType = `image/${fileName.split('.')[1]}`;
+    const decodedUrl = decodeURIComponent(event.Records[0].s3.object.key);
+
+    const image = await s3.get(decodedUrl, getEnv('S3_NAME'));
+    await this.service.saveSubclip(image.Body, fileName, contentType, userEmail);
   }
 }

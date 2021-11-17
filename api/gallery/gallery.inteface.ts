@@ -34,3 +34,8 @@ export interface Pexel {
   id: string;
   url: string;
 }
+export interface Response429 {
+  status: 429;
+  headers: any;
+  body: string;
+}

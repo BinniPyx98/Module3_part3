@@ -1,6 +1,8 @@
+import { getEnv } from '@helper/environment';
 import { errorHandler } from '@helper/http-api/error-handler';
 import { log } from '@helper/logger';
 import { APIGatewayLambdaEvent } from '@interfaces/api-gateway-lambda.interface';
+import { S3Service } from '@services/s3.service';
 import { Handler, S3Handler } from 'aws-lambda';
 import { ResolveObject } from './gallery.inteface';
 import { GalleryManager } from './gallery.manager';
@@ -58,6 +60,7 @@ export const getS3Url: Handler<APIGatewayLambdaEvent<any>, any> = async (event) 
 export const getImageFromPixel: Handler<APIGatewayLambdaEvent<any>, any> = async (event) => {
   const manager = new GalleryManager();
   const images = await manager.getPexelImages(event);
+
   return {
     statusCode: 200,
     headers: {
@@ -70,7 +73,7 @@ export const getImageFromPixel: Handler<APIGatewayLambdaEvent<any>, any> = async
 };
 export const saveLikedPhoto: Handler<APIGatewayLambdaEvent<any>, any> = async (event) => {
   const manager = new GalleryManager();
-  manager.saveLikedPhoto(event);
+  await manager.saveLikedPhoto(event);
   return {
     statusCode: 200,
     headers: {
@@ -87,4 +90,6 @@ export const triggerS3Upload: S3Handler = async (event) => {
   const imageKeyInS3 = decodeURIComponent(event.Records[0].s3.object.key);
   const manager = new GalleryManager();
   await manager.updateStatus(imageKeyInS3);
+  await manager.saveSubclip(event, imageKeyInS3);
+  log('trigger stoped');
 };
