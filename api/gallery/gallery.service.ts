@@ -209,24 +209,7 @@ export class GalleryService {
     const updateStatus = await dynamoClient.send(new UpdateItemCommand(updateItem));
     log('result function updateStatus in service = ' + updateStatus);
   }
-  async saveImgMetadata(event, metadata: Metadata): Promise<void> {
-    const userEmail = await this.getUserIdFromToken(event);
-    const hashImage = crypto.createHmac('sha256', 'test').update(metadata.filename).digest('hex');
 
-    const newUser = {
-      TableName: getEnv('GALLERY_TABLE_NAME'),
-      Item: marshall({
-        email: userEmail,
-        imageName: metadata.filename,
-        Hash: 'imageHash_' + hashImage,
-        extension: metadata.contentType,
-        imageSize: metadata.size,
-        imageStatus: 'OPEN',
-      }),
-    };
-    const result = await dynamoClient.send(new PutItemCommand(newUser));
-    log('result function saveImgMetadata = ' + result);
-  }
   async getUrlForUploadToS3(event, metadata: Metadata): Promise<string> {
     const userEmail = await this.getUserIdFromToken(event);
     const s3 = new S3Service();
@@ -236,58 +219,7 @@ export class GalleryService {
 
     return url;
   }
-  async getPexelImages(queryStringValue: string): Promise<any> {
-    const pexel = new PexelService();
-    const data = await pexel.searchPhoto(queryStringValue);
-    if (data.status === 429) {
-      return {
-        statusCode: 429,
-        body: 'limit',
-      };
-    }
-    const jsonPixelResolve = data;
-    const pathArray: Array<Pexel> = [];
-    // @ts-ignore
-    for (const photo of jsonPixelResolve.data.photos) {
-      pathArray.push({
-        id: photo.id,
-        url: photo.src.medium,
-      });
-    }
-    return pathArray;
-  }
-  async saveLikedPhoto(event, idArray: Array<number>): Promise<void> {
-    let data;
-    let image;
-    for (const id of idArray) {
-      const pexel = new PexelService();
-      data = await pexel.getPhoto(id);
-      const filename = data.data.src.original.split(`${id}/`)[1];
-      const contentType = filename.split('.')[1];
-      // log(filename[1]);
-      const s3 = new S3Service();
-      try {
-        image = await axios.get(data.data.src.original, { responseType: 'arraybuffer' });
-      } catch (e) {
-        log(e);
-      }
-      const userEmail = await this.getUserIdFromToken(event);
-      const imageMetadata = {
-        filename: filename,
-        size: image.data.length,
-        contentType: `image/${contentType}`,
-      };
-      const test = await s3.put(`${userEmail}/${filename}`, image.data, getEnv('S3_NAME'), imageMetadata.contentType);
-      log(test);
-      try {
-        const responseS3 = await this.saveImgMetadata(event, imageMetadata);
-        log(responseS3);
-      } catch (e) {
-        log(e);
-      }
-      await s3.put(`${userEmail}/${filename}`, image.data, getEnv('S3_NAME'), imageMetadata.contentType);
-    }
-  }
+
 
   async saveSubclip(img, filename: string, contentType: string, userEmail: string): Promise<void> {
     const [fileName, extension] = filename.split('.');

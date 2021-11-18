@@ -57,34 +57,6 @@ export const getS3Url: Handler<APIGatewayLambdaEvent<any>, any> = async (event) 
     body: JSON.stringify(response),
   };
 };
-export const getImageFromPixel: Handler<APIGatewayLambdaEvent<any>, any> = async (event) => {
-  const manager = new GalleryManager();
-  const images = await manager.getPexelImages(event);
-
-  return {
-    statusCode: 200,
-    headers: {
-      'Access-Control-Allow-Headers': 'Authorization',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': '*',
-    },
-    body: JSON.stringify(images),
-  };
-};
-export const saveLikedPhoto: Handler<APIGatewayLambdaEvent<any>, any> = async (event) => {
-  const manager = new GalleryManager();
-  await manager.saveLikedPhoto(event);
-  return {
-    statusCode: 200,
-    headers: {
-      'Access-Control-Allow-Headers': 'Authorization',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': '*',
-    },
-    //body: JSON.stringify(images),
-  };
-};
-
 export const triggerS3Upload: S3Handler = async (event) => {
   log(event);
   const imageKeyInS3 = decodeURIComponent(event.Records[0].s3.object.key);

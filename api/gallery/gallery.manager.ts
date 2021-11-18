@@ -54,16 +54,6 @@ export class GalleryManager {
     return this.service.updateStatus(userEmail, decodedUrl, fileName);
   }
 
-  getPexelImages(event: APIGatewayLambdaEvent<void>): Promise<Array<Pexel>> {
-    const queryStringValue = event.query.searchQuery;
-    return this.service.getPexelImages(queryStringValue);
-  }
-
-  saveLikedPhoto(event: APIGatewayLambdaEvent<string>) {
-    const idArray = JSON.parse(event.body);
-    return this.service.saveLikedPhoto(event, idArray);
-  }
-
   async saveSubclip(event, imageKeyInS3: string): Promise<void> {
     const s3 = new S3Service();
     const [userEmail, fileName] = imageKeyInS3.split('/');

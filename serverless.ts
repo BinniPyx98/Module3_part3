@@ -1,6 +1,7 @@
 import type { AWS } from '@serverless/typescript';
 import { authorizationConfig } from './config/serverless/parts/auth/auth';
 import { getGalleryConfig } from './config/serverless/parts/gallery/gallery';
+import { pexelApiConfig } from './config/serverless/parts/pexel/pexel-api';
 import { s3Config } from './config/serverless/parts/s3/s3';
 import { s3SUbClipConfig } from './config/serverless/parts/s3/s3_subclips';
 import { dynamoConfig } from './config/serverless/parts/tables/galleryTable';
@@ -80,4 +81,5 @@ module.exports = joinParts(masterConfig, [
   s3SUbClipConfig,
   getGalleryConfig,
   dynamoConfig,
+  pexelApiConfig,
 ]);

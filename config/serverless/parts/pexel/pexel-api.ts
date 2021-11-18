@@ -1,39 +1,15 @@
 import { AWSPartitial } from '../../types';
 
-export const getGalleryConfig: AWSPartitial = {
+export const pexelApiConfig: AWSPartitial = {
   functions: {
-    getGallery: {
-      handler: 'api/gallery/handler.getGallery',
+    saveLikedPhoto: {
+      handler: 'api/pexel-api/handler.saveLikedPhoto',
       memorySize: 500,
+      timeout: 20,
       events: [
         {
           http: {
-            path: '/gallery',
-            method: 'get',
-            integration: 'lambda-proxy',
-            cors: true,
-            authorizer: {
-              name: 'AuthorizerCheckToken',
-            },
-            response: {
-              headers: {
-                'Access-Control-Allow-Origin': "'*'",
-                'Content-Type': "'application/json'",
-                'Access-Control-Allow-Headers': "'Authorization'",
-              },
-              template: "$input.json('$')",
-            },
-          },
-        },
-      ],
-    },
-    getS3Url: {
-      handler: 'api/gallery/handler.getS3Url',
-      memorySize: 128,
-      events: [
-        {
-          http: {
-            path: '/getS3Url',
+            path: '/saveLikedPhoto',
             method: 'post',
             integration: 'lambda-proxy',
             cors: true,
@@ -51,16 +27,26 @@ export const getGalleryConfig: AWSPartitial = {
         },
       ],
     },
-    triggerS3Upload: {
-      handler: 'api/gallery/handler.triggerS3Upload',
-      memorySize: 500,
-      timeout: 15,
+    getImageFromPixel: {
+      handler: 'api/pexel-api/handler.getImageFromPixel',
+      memorySize: 128,
       events: [
         {
-          s3: {
-            bucket: 'kalinichenko-dev-s3bucket',
-            existing: true,
-            event: 's3:ObjectCreated:*',
+          http: {
+            path: '/getImageFromPixel',
+            method: 'get',
+            integration: 'lambda',
+            cors: true,
+            authorizer: {
+              name: 'AuthorizerCheckToken',
+            },
+            response: {
+              headers: {
+                'Access-Control-Allow-Origin': "'*'",
+                'Content-Type': "'application/json'",
+              },
+              template: "$input.json('$')",
+            },
           },
         },
       ],
