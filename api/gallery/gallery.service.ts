@@ -8,6 +8,7 @@ import {
 import { getEnv } from '@helper/environment';
 import { log } from '@helper/logger';
 import { dynamoClient } from '@services/dynamo-connect';
+import { PexelService } from '@services/pexel.service';
 import { S3Service } from '@services/s3.service';
 import axios from 'axios';
 import * as crypto from 'crypto';
@@ -236,21 +237,8 @@ export class GalleryService {
     return url;
   }
   async getPexelImages(queryStringValue: string): Promise<any> {
-    let data;
-    const options = {
-      params: {
-        query: queryStringValue,
-        per_page: 10,
-      },
-      headers: {
-        Authorization: getEnv('KEY_API'),
-      },
-    };
-    try {
-      data = await axios.get('https://api.pexels.com/v1/search?query=${queryStringValue}&per_page=10', options);
-    } catch (e) {
-      log(e);
-    }
+    const pexel = new PexelService();
+    const data = await pexel.searchPhoto(queryStringValue);
     if (data.status === 429) {
       return {
         statusCode: 429,
@@ -272,16 +260,8 @@ export class GalleryService {
     let data;
     let image;
     for (const id of idArray) {
-      const options = {
-        headers: {
-          Authorization: getEnv('KEY_API'),
-        },
-      };
-      try {
-        data = await axios.get(`https://api.pexels.com/v1/photos/${id}`, options);
-      } catch (e) {
-        log(e);
-      }
+      const pexel = new PexelService();
+      data = await pexel.getPhoto(id);
       const filename = data.data.src.original.split(`${id}/`)[1];
       const contentType = filename.split('.')[1];
       // log(filename[1]);
