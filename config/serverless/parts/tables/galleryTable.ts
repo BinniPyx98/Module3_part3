@@ -3,7 +3,7 @@ import { AWSPartitial } from '../../types';
 export const dynamoConfig: AWSPartitial = {
   provider: {
     environment: {
-      GALLERY_TABLE_NAME: '${self:custom.tablesNames.GalleryTable.${self:provider.stage}}',
+      GALLERY_TABLE_NAME: '${file(env.yml):${self:provider.stage}.GALLERY_TABLE_NAME}',
     },
     iam: {
       role: {
@@ -73,18 +73,8 @@ export const dynamoConfig: AWSPartitial = {
             },
           ],
           BillingMode: 'PAY_PER_REQUEST',
-          TableName: '${self:custom.tablesNames.GalleryTable.${self:provider.stage}}',
+          TableName: '${file(env.yml):${self:provider.stage}.GALLERY_TABLE_NAME}',
         },
-      },
-    },
-  },
-  custom: {
-    tablesNames: {
-      GalleryTable: {
-        local: 'kalinichenko-local-gallery',
-        dev: 'kalinichenko-dev-gallery',
-        test: 'kalinichenko-test-gallery',
-        prod: 'kalinichenko-prod-gallery',
       },
     },
   },

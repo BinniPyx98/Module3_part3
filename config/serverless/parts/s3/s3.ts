@@ -3,7 +3,7 @@ import { AWSPartitial } from '../../types';
 export const s3Config: AWSPartitial = {
   provider: {
     environment: {
-      S3_NAME: '${self:custom.S3Names.S3Bucket.${self:provider.stage}}',
+      S3_NAME: '${file(env.yml):${self:provider.stage}.S3_NAME}',
     },
     iam: {
       role: {
@@ -34,7 +34,7 @@ export const s3Config: AWSPartitial = {
       S3: {
         Type: 'AWS::S3::Bucket',
         Properties: {
-          BucketName: '${self:custom.S3Names.S3Bucket.${self:provider.stage}}',
+          BucketName: '${file(env.yml):${self:provider.stage}.S3_NAME}',
           AccessControl: 'PublicReadWrite',
           CorsConfiguration: {
             CorsRules: [
@@ -46,16 +46,6 @@ export const s3Config: AWSPartitial = {
             ],
           },
         },
-      },
-    },
-  },
-  custom: {
-    S3Names: {
-      S3Bucket: {
-        local: 'kalinichenko-dev-s3bucket',
-        dev: 'kalinichenko-dev-s3bucket',
-        test: 'kalinichenko-test-s3bucket',
-        prod: 'kalinichenko-prod-s3bucket',
       },
     },
   },

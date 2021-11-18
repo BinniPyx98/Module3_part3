@@ -3,7 +3,7 @@ import { AWSPartitial } from '../../types';
 export const s3SUbClipConfig: AWSPartitial = {
   provider: {
     environment: {
-      S3_SUBCLIP: '${self:custom.S3SubclipNames.S3SubclipBucket.${self:provider.stage}}',
+      S3_SUBCLIP: '${file(env.yml):${self:provider.stage}.S3_SUBCLIP}',
     },
     iam: {
       role: {
@@ -34,7 +34,7 @@ export const s3SUbClipConfig: AWSPartitial = {
       S3Subclip: {
         Type: 'AWS::S3::Bucket',
         Properties: {
-          BucketName: '${self:custom.S3SubclipNames.S3SubclipBucket.${self:provider.stage}}',
+          BucketName: '${file(env.yml):${self:provider.stage}.S3_SUBCLIP}',
           AccessControl: 'PublicReadWrite',
           CorsConfiguration: {
             CorsRules: [
@@ -46,16 +46,6 @@ export const s3SUbClipConfig: AWSPartitial = {
             ],
           },
         },
-      },
-    },
-  },
-  custom: {
-    S3SubclipNames: {
-      S3SubclipBucket: {
-        local: 'kalinichenko-dev-s3bucket-subclip',
-        dev: 'kalinichenko-dev-s3bucket-subclip',
-        test: 'kalinichenko-test-s3bucket-subclip',
-        prod: 'kalinichenko-prod-s3bucket-subclip',
       },
     },
   },
