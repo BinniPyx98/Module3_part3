@@ -223,7 +223,7 @@ export class GalleryService {
   async saveSubclip(img, filename: string, contentType: string, userEmail: string): Promise<void> {
     const [fileName, extension] = filename.split('.');
     const subClip = new SubClipService();
-    const sharpImg = subClip.sharp(img, 250, 512);
+    const sharpImg = await subClip.sharp(img, 250, 512);
     await subClip.saveInS3(sharpImg, filename, extension, userEmail);
     await this.saveSubclipStatusInDynamo(userEmail, filename);
   }
