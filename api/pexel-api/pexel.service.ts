@@ -1,4 +1,4 @@
-import { PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { PutItemCommand} from '@aws-sdk/client-dynamodb';
 import { getEnv } from '@helper/environment';
 import { log } from '@helper/logger';
 import { dynamoClient } from '@services/dynamo-connect';

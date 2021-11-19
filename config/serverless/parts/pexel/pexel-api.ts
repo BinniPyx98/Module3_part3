@@ -1,15 +1,16 @@
+import { GetAtt } from '../../cf-intristic-fn';
 import { AWSPartitial } from '../../types';
 
 export const pexelApiConfig: AWSPartitial = {
   functions: {
     saveLikedPhoto: {
-      handler: 'api/pexel-api/handler.saveLikedPhoto',
+      handler: 'api/pexel-api/handler.addMessage',
       memorySize: 500,
       timeout: 20,
       events: [
         {
           http: {
-            path: '/saveLikedPhoto',
+            path: '/gallery/saveLikedPhoto',
             method: 'post',
             integration: 'lambda-proxy',
             cors: true,
@@ -27,8 +28,19 @@ export const pexelApiConfig: AWSPartitial = {
         },
       ],
     },
-    getImageFromPixel: {
-      handler: 'api/pexel-api/handler.getImageFromPixel',
+    test: {
+      handler: 'api/pexel-api/handler.saveLikedPhoto',
+      memorySize: 128,
+      events: [
+        {
+          sqs: {
+            arn: GetAtt('imagesSQS.Arn'),
+          },
+        },
+      ],
+    },
+    getImagesPixel: {
+      handler: 'api/pexel-api/handler.getImagesPixel',
       memorySize: 128,
       events: [
         {

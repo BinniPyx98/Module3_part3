@@ -57,11 +57,10 @@ export const getS3Url: Handler<APIGatewayLambdaEvent<any>, any> = async (event) 
     body: JSON.stringify(response),
   };
 };
-export const triggerS3Upload: S3Handler = async (event) => {
+export const saveMetadataAndSubClip: S3Handler = async (event) => {
   log(event);
   const imageKeyInS3 = decodeURIComponent(event.Records[0].s3.object.key);
   const manager = new GalleryManager();
   await manager.updateStatus(imageKeyInS3);
   await manager.saveSubclip(event, imageKeyInS3);
-  log('trigger stopped');
 };

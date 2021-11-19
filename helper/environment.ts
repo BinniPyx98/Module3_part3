@@ -22,6 +22,8 @@ const envs: Record<string, string | undefined> = {
   GALLERY_TABLE_NAME: process.env.GALLERY_TABLE_NAME,
   S3_SUBCLIP: process.env.S3_SUBCLIP,
   KEY_API: process.env.KEY_API,
+  IMAGES_QUEUE_NAME: process.env.IMAGES_QUEUE_NAME,
+  IMAGES_QUEUE_URl: process.env.IMAGES_QUEUE_URL,
 };
 
 export type Stage = 'local' | 'dev' | 'test' | 'prod';

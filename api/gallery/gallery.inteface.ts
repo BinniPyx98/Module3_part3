@@ -1,5 +1,3 @@
-import { getImageFromPixel } from './handler';
-
 /**
  * This file should contain all required interfaces for the feature
  */

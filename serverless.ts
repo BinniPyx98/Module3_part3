@@ -4,6 +4,7 @@ import { getGalleryConfig } from './config/serverless/parts/gallery/gallery';
 import { pexelApiConfig } from './config/serverless/parts/pexel/pexel-api';
 import { s3Config } from './config/serverless/parts/s3/s3';
 import { s3SUbClipConfig } from './config/serverless/parts/s3/s3_subclips';
+import { SQSConfig } from './config/serverless/parts/sqs/upload-images-sqs';
 import { dynamoConfig } from './config/serverless/parts/tables/galleryTable';
 import { restApiCorsConfig } from './config/serverless/parts/rest-api-cors';
 import { joinParts } from './config/serverless/utils';
@@ -82,4 +83,5 @@ module.exports = joinParts(masterConfig, [
   getGalleryConfig,
   dynamoConfig,
   pexelApiConfig,
+  SQSConfig,
 ]);

@@ -33,7 +33,7 @@ export const getGalleryConfig: AWSPartitial = {
       events: [
         {
           http: {
-            path: '/getS3Url',
+            path: '/gallery/getS3Url',
             method: 'post',
             integration: 'lambda-proxy',
             cors: true,
@@ -51,8 +51,8 @@ export const getGalleryConfig: AWSPartitial = {
         },
       ],
     },
-    triggerS3Upload: {
-      handler: 'api/gallery/handler.triggerS3Upload',
+    saveMetadataAndSubClip: {
+      handler: 'api/gallery/handler.saveMetadataAndSubClip',
       memorySize: 500,
       timeout: 15,
       events: [
