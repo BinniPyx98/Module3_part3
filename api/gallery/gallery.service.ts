@@ -8,12 +8,14 @@ import {
 import { getEnv } from '@helper/environment';
 import { log } from '@helper/logger';
 import { dynamoClient } from '@services/dynamo-connect';
+import { PexelService } from '@services/pexel.service';
 import { S3Service } from '@services/s3.service';
+import { SubClipService } from '@services/sharp';
+import axios from 'axios';
 import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
-import { DatabaseResult, GalleryObject, Metadata } from './gallery.inteface';
+import { DatabaseResult, GalleryObject, Metadata, Pexel } from './gallery.inteface';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
-
 export class GalleryService {
   async checkFilterAndFindInDb(event): Promise<DatabaseResult> {
     const pageNumber = Number(event.queryStringParameters.page);
@@ -41,65 +43,10 @@ export class GalleryService {
     pageNumber: number,
     limit: number
   ): Promise<DatabaseResult> {
-    // const all_Images: QueryCommandInput = {
-    //   TableName: getEnv('GALLERY_TABLE_NAME'),
-    //   KeyConditionExpression: '#userEmail = :user',
-    //   ExpressionAttributeNames: {
-    //     '#userEmail': 'email',
-    //   },
-    //   ExpressionAttributeValues: marshall({
-    //     ':user': 'All',
-    //   }),
-    // };
-    // const myImages: QueryCommandInput = {
-    //   TableName: getEnv('GALLERY_TABLE_NAME'),
-    //   KeyConditionExpression: '#userEmail = :user',
-    //   ExpressionAttributeNames: {
-    //     '#userEmail': 'email',
-    //   },
-    //   ExpressionAttributeValues: marshall({
-    //     ':user': userIdFromRequest,
-    //   }),
-    // };
-   // const allImgFromDynamo = await dynamoClient.send(new QueryCommand(all_Images));
-    //const userImgFromDynamo = await dynamoClient.send(new QueryCommand(myImages));
     // @ts-ignore
     const allArrayPath = await this.getAdminsImage();
     log('allPathArray = ' + allArrayPath);
     const userArrayPath = await this.getUsersImage(userIdFromRequest);
-   // const presentUserImageObject = userImgFromDynamo.Items;
-   // const presentAllImageObject = allImgFromDynamo.Items;
-
-    // if (presentUserImageObject?.length == 0) {
-    //   userArrayPath = [];
-    // } else {
-    //   for (const item of userImgFromDynamo.Items!) {
-    //     for (const prop in item) {
-    //       log('prop = ' + prop);
-    //       if (prop === 'urlImage') {
-    //         log('item.urlImage.S = ' + item.urlImage.S);
-    //         // @ts-ignore
-    //         userArrayPath.push(item.urlImage.S);
-    //       }
-    //     }
-    //     // @ts-ignore
-    //   }
-    // }
-
-    // if (presentAllImageObject?.length == 0) {
-    //   allArrayPath = [];
-    // } else {
-    //   for (const item of allImgFromDynamo.Items!) {
-    //     for (const prop in item) {
-    //       if (prop === 'urlImage') {
-    //         log('item in all = ' + item.urlImage.S);
-    //         // @ts-ignore
-    //         allArrayPath.push(item.urlImage.S);
-    //       }
-    //     }
-    //   }
-    // }
-
     const contArray = allArrayPath.concat(userArrayPath);
     log('cont Array= ' + contArray);
     const total = Math.ceil(Number(contArray.length) / limit);
@@ -262,6 +209,43 @@ export class GalleryService {
     const updateStatus = await dynamoClient.send(new UpdateItemCommand(updateItem));
     log('result function updateStatus in service = ' + updateStatus);
   }
+
+  async getUrlForUploadToS3(event, metadata: Metadata): Promise<string> {
+    const userEmail = await this.getUserIdFromToken(event);
+    const s3 = new S3Service();
+    const url = s3.getPreSignedPutUrl(userEmail + '/' + metadata.filename, getEnv('S3_NAME'));
+    log('Url for upload image, returned function getUrlForUploadToS3 =  ' + url);
+    const decodedUrl = decodeURIComponent(url);
+
+    return url;
+  }
+
+  async saveSubclip(img, filename: string, contentType: string, userEmail: string): Promise<void> {
+    const [fileName, extension] = filename.split('.');
+    const subClip = new SubClipService();
+    const sharpImg = subClip.sharp(img, 250, 512);
+    await subClip.saveInS3(sharpImg, filename, extension, userEmail);
+    await this.saveSubclipStatusInDynamo(userEmail, filename);
+  }
+  async saveSubclipStatusInDynamo(userEmail: string, fileName: string) {
+    const hashImage = crypto.createHmac('sha256', 'test').update(fileName).digest('hex');
+    const updateItem = {
+      TableName: getEnv('GALLERY_TABLE_NAME'),
+      Key: marshall({
+        email: userEmail,
+        Hash: 'imageHash_' + hashImage,
+      }),
+      UpdateExpression: 'set Subclip = :subclipStatus',
+      ExpressionAttributeValues: marshall({
+        ':subclipStatus': true,
+      }),
+    };
+    try {
+      const updateStatus = await dynamoClient.send(new UpdateItemCommand(updateItem));
+    } catch (err) {
+      log(err);
+    }
+  }
   async saveImgMetadata(event, metadata: Metadata): Promise<void> {
     const userEmail = await this.getUserIdFromToken(event);
     const hashImage = crypto.createHmac('sha256', 'test').update(metadata.filename).digest('hex');
@@ -279,14 +263,5 @@ export class GalleryService {
     };
     const result = await dynamoClient.send(new PutItemCommand(newUser));
     log('result function saveImgMetadata = ' + result);
-  }
-  async getUrlForUploadToS3(event, metadata: Metadata): Promise<string> {
-    const userEmail = await this.getUserIdFromToken(event);
-    const s3 = new S3Service();
-    const url = s3.getPreSignedPutUrl(userEmail + '/' + metadata.filename, getEnv('S3_NAME'));
-    log('Url for upload image, returned function getUrlForUploadToS3 =  ' + url);
-    const decodedUrl = decodeURIComponent(url);
-
-    return url;
   }
 }

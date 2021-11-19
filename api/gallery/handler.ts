@@ -1,6 +1,8 @@
+import { getEnv } from '@helper/environment';
 import { errorHandler } from '@helper/http-api/error-handler';
 import { log } from '@helper/logger';
 import { APIGatewayLambdaEvent } from '@interfaces/api-gateway-lambda.interface';
+import { S3Service } from '@services/s3.service';
 import { Handler, S3Handler } from 'aws-lambda';
 import { ResolveObject } from './gallery.inteface';
 import { GalleryManager } from './gallery.manager';
@@ -55,10 +57,10 @@ export const getS3Url: Handler<APIGatewayLambdaEvent<any>, any> = async (event) 
     body: JSON.stringify(response),
   };
 };
-
-export const triggerS3Upload: S3Handler = async (event) => {
+export const saveMetadataAndSubClip: S3Handler = async (event) => {
   log(event);
   const imageKeyInS3 = decodeURIComponent(event.Records[0].s3.object.key);
   const manager = new GalleryManager();
   await manager.updateStatus(imageKeyInS3);
+  await manager.saveSubclip(event, imageKeyInS3);
 };

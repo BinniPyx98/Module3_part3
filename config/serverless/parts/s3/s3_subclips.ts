@@ -1,9 +1,9 @@
 import { AWSPartitial } from '../../types';
 
-export const s3Config: AWSPartitial = {
+export const s3SUbClipConfig: AWSPartitial = {
   provider: {
     environment: {
-      S3_NAME: '${file(env.yml):${self:provider.stage}.S3_NAME}',
+      S3_SUBCLIP: '${file(env.yml):${self:provider.stage}.S3_SUBCLIP}',
     },
     iam: {
       role: {
@@ -21,8 +21,8 @@ export const s3Config: AWSPartitial = {
               's3:PutObjectAcl',
             ],
             Resource: [
-              'arn:aws:s3:::${file(env.yml):${self:provider.stage}.S3_NAME}',
-              'arn:aws:s3:::${file(env.yml):${self:provider.stage}.S3_NAME}/*',
+              'arn:aws:s3:::${file(env.yml):${self:provider.stage}.S3_SUBCLIP}',
+              'arn:aws:s3:::${file(env.yml):${self:provider.stage}.S3_SUBCLIP}/*',
             ],
           },
         ],
@@ -31,10 +31,10 @@ export const s3Config: AWSPartitial = {
   },
   resources: {
     Resources: {
-      S3: {
+      S3Subclip: {
         Type: 'AWS::S3::Bucket',
         Properties: {
-          BucketName: '${file(env.yml):${self:provider.stage}.S3_NAME}',
+          BucketName: '${file(env.yml):${self:provider.stage}.S3_SUBCLIP}',
           AccessControl: 'PublicReadWrite',
           CorsConfiguration: {
             CorsRules: [
