@@ -1,6 +1,7 @@
 import { getEnv } from '@helper/environment';
 import { APIGatewayLambdaEvent } from '@interfaces/api-gateway-lambda.interface';
 import { S3Service } from '@services/s3.service';
+import { SQSHandler, SQSRecord } from 'aws-lambda';
 import { DatabaseResult, GetGalleryObject, Metadata, Pexel } from './pexel.inteface';
 import { PexelServiceApi } from './pexel.service';
 import { log } from '@helper/logger';
@@ -20,7 +21,6 @@ export class PexelManager {
     this.service = new PexelServiceApi();
   }
 
-
   // /**
   //  * This method implements some feature's functionality
   //  * It should validate required data
@@ -35,8 +35,17 @@ export class PexelManager {
     return this.service.getPexelImages(queryStringValue);
   }
 
-  saveLikedPhoto(event: APIGatewayLambdaEvent<string>) {
-    const idArray = JSON.parse(event.body);
-    return this.service.saveLikedPhoto(event, idArray);
+  async saveLikedPhoto(event) {
+    log('manager');
+    const sqsMessages = event.Records;
+    for (const item of sqsMessages) {
+      const body = JSON.parse(item.body);
+      const email = Object.keys(body);
+      log(email);
+      await this.service.saveLikedPhoto(email, body[`${email}`], item.receiptHandle);
+    }
+  }
+  getUserFromToken(event) {
+    return this.service.getUserIdFromToken(event);
   }
 }

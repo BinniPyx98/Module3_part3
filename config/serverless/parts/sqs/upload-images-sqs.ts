@@ -26,7 +26,7 @@ export const SQSConfig: AWSPartitial = {
         DeletionPolicy: 'Retain',
         Properties: {
           QueueName: '${self:custom.sqsInfo.sqsName.${self:provider.stage}}',
-          DelaySeconds: 60,
+          DelaySeconds: 3600,
           VisibilityTimeout: 120,
         },
       },

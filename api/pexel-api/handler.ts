@@ -22,9 +22,8 @@ export const getImageFromPixel: Handler<APIGatewayLambdaEvent<any>, any> = async
 };
 export const saveLikedPhoto: SQSHandler = async (event) => {
   const manager = new PexelManager();
-  const sqsMessages: Array<SQSRecord> = event.Records;
-  log(event);
-  // await manager.saveLikedPhoto(event);
+  // const sqsMessages: Array<SQSRecord> = event.Records;
+  await manager.saveLikedPhoto(event);
   // return {
   //   statusCode: 200,
   //   headers: {
@@ -37,7 +36,12 @@ export const saveLikedPhoto: SQSHandler = async (event) => {
 };
 export const addMessage: Handler<APIGatewayLambdaEvent<any>, any> = async (event) => {
   const manager = new PexelManager();
+  const userEmail = await manager.getUserFromToken(event);
+  log('event = ' + event.body);
   const idArray = JSON.parse(event.body);
+  const userImg = {
+    userEmail: idArray,
+  };
   const sqs = new SQSService(getEnv('IMAGES_QUEUE_URL'));
-  await sqs.sendMessage(idArray);
+  await sqs.sendMessage(JSON.stringify(userImg));
 };
