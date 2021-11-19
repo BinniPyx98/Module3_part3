@@ -10,12 +10,12 @@ import { log } from '@helper/logger';
 import { dynamoClient } from '@services/dynamo-connect';
 import { PexelService } from '@services/pexel.service';
 import { S3Service } from '@services/s3.service';
+import { SubClipService } from '@services/sharp';
 import axios from 'axios';
 import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import { DatabaseResult, GalleryObject, Metadata, Pexel } from './gallery.inteface';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
-import * as sharp from 'sharp';
 export class GalleryService {
   async checkFilterAndFindInDb(event): Promise<DatabaseResult> {
     const pageNumber = Number(event.queryStringParameters.page);
@@ -220,28 +220,12 @@ export class GalleryService {
     return url;
   }
 
-
   async saveSubclip(img, filename: string, contentType: string, userEmail: string): Promise<void> {
     const [fileName, extension] = filename.split('.');
-    const s3 = new S3Service();
-    const sharpImg = await sharp(img)
-      .resize(512, 250, {
-        fit: sharp.fit.inside,
-      })
-      .toBuffer();
-    log('sharpImage = ' + sharpImg);
-    try {
-      const subClipUploadResult = await s3.put(
-        `${userEmail}/${fileName}_SC.${extension}`,
-        sharpImg,
-        getEnv('S3_SUBCLIP'),
-        contentType
-      );
-      log(subClipUploadResult);
-      await this.saveSubclipStatusInDynamo(userEmail, filename);
-    } catch (err) {
-      log(err);
-    }
+    const subClip = new SubClipService();
+    const sharpImg = subClip.sharp(img, 250, 512);
+    await subClip.saveInS3(sharpImg, filename, extension, userEmail);
+    await this.saveSubclipStatusInDynamo(userEmail, filename);
   }
   async saveSubclipStatusInDynamo(userEmail: string, fileName: string) {
     const hashImage = crypto.createHmac('sha256', 'test').update(fileName).digest('hex');
@@ -261,5 +245,23 @@ export class GalleryService {
     } catch (err) {
       log(err);
     }
+  }
+  async saveImgMetadata(event, metadata: Metadata): Promise<void> {
+    const userEmail = await this.getUserIdFromToken(event);
+    const hashImage = crypto.createHmac('sha256', 'test').update(metadata.filename).digest('hex');
+
+    const newUser = {
+      TableName: getEnv('GALLERY_TABLE_NAME'),
+      Item: marshall({
+        email: userEmail,
+        imageName: metadata.filename,
+        Hash: 'imageHash_' + hashImage,
+        extension: metadata.contentType,
+        imageSize: metadata.size,
+        imageStatus: 'OPEN',
+      }),
+    };
+    const result = await dynamoClient.send(new PutItemCommand(newUser));
+    log('result function saveImgMetadata = ' + result);
   }
 }

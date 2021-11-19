@@ -40,11 +40,6 @@ export class GalleryManager {
   getUrlForUploadToS3(event, metadata: Metadata): Promise<string> {
     return this.service.getUrlForUploadToS3(event, metadata);
   }
-
-  saveImgMetadata(event: APIGatewayLambdaEvent<string>, metadata: Metadata): Promise<void> {
-    return this.service.saveImgMetadata(event, metadata);
-  }
-
   updateStatus(imageKeyInS3: string): Promise<void> {
     const s3 = new S3Service();
     const [userEmail, fileName] = imageKeyInS3.split('/');
@@ -62,5 +57,8 @@ export class GalleryManager {
 
     const image = await s3.get(decodedUrl, getEnv('S3_NAME'));
     await this.service.saveSubclip(image.Body, fileName, contentType, userEmail);
+  }
+  async saveImgMetadata(event: APIGatewayLambdaEvent<string>, metadata: Metadata): Promise<void> {
+    return this.service.saveImgMetadata(event, metadata);
   }
 }
